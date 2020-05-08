@@ -1,0 +1,9 @@
+`git reflog`
+
+If you need to undo a rebase, or a merge, or something that has changed (local) history, look at git reflog. It keeps a record of the _true_ history, like when you do a rebase, it still has the state of the repo at each point before it, plus the state after each commit was replayed.
+
+To revert to a point without preserving changes, find the commit and see how far off HEAD it is, then reset to that like so:
+
+```
+git reset --hard HEAD@{5}
+```
