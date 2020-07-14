@@ -2,7 +2,9 @@
 
 I hate windows, so I'm trying to avoid using it as much as possible for my
 actual development work. So I'm documenting how to set up a WSL environment
-for web development
+for web development.
+
+This guide assumes WSL2.
 
 ## Install a distro
 
@@ -105,4 +107,22 @@ Now we can run
 sudo apt-get install -y nodejs
 ```
 
+## Yarn
 
+If you like to use the Yarn package manager, you'll need to add another repo, as the yarn package on the Ubuntu repos is unrelated. The steps are documented on the
+Yarn website, but I'll just list them here for ease:
+
+```
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+sudo apt update
+sudo apt install --no-install-recommends yarn
+```
+
+## Access the machine
+
+Because WSL2 is just a virtual machine with little to no configuration in terms
+of how it is virtualised, the network is no longer an extension of the host
+network, but a separate network entirely. One that changes every time something
+to do with the VM's network changes (usually a system restart of either the 
+Linux VM, or the host machine).
