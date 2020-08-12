@@ -13,7 +13,7 @@ interface State {
 interface Action {
   type: string;
   payload: {
-    [key: string]: any
+    [key: string]: any;
   }
 }
 
@@ -40,7 +40,7 @@ const Provider: React.FC = ({ children }): JSX.Element => {
 const useSharedState = (): State => {
   const context = React.useContext(StateContext);
   if (context === undefined) {
-    throw new Error('useSharedState must be used within a Provider');
+    throw new Error('useSharedState must be used within a StateContext Provider');
   }
   return context;
 }
@@ -48,7 +48,7 @@ const useSharedState = (): State => {
 const useDispatch = (): React.Dispatch<Action> => {
   const context = React.useContext(DispatchContext);
   if (context === undefined) {
-    throw new Error('useDispatch must be used within a Provider');
+    throw new Error('useDispatch must be used within a DispatchContext Provider');
   }
   return context;
 }
