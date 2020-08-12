@@ -124,5 +124,22 @@ sudo apt install --no-install-recommends yarn
 Because WSL2 is just a virtual machine with little to no configuration in terms
 of how it is virtualised, the network is no longer an extension of the host
 network, but a separate network entirely. One that changes every time something
-to do with the VM's network changes (usually a system restart of either the 
-Linux VM, or the host machine).
+to do with the VM's network changes. In order to make this more bearable so that
+I don't need to manually update my Windows hosts file every time I restart (which
+happens super duper often thanks to Windows), I whipped up a really quick shell script
+to do it for me:
+
+```
+#! /bin/bash
+ip=$(ifconfig eth0 | grep -Eo "inet ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})")
+
+echo "127.0.0.1 localhost
+${ip#inet } $1
+::1 localhost" > /mnt/c/Windows/System32/drivers/etc/hosts
+```
+
+Basically it just replaces the contents of my hosts file with whatever `ip` is set to,
+and with whatever argument I pass to it.
+
+In practice, this can probably be hardcoded, or even include reading the files in `sites_enabled` 
+but that's more work than I'm willing to put in.
