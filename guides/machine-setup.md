@@ -12,11 +12,9 @@ This is generally dependent somewhat on what platform we're working on but here'
 	* Yarn
 	* Apache
 	* PHP
-	* php-fpm
 	* Composer
-	* MySQL/MariaDB
+	* MySQL
 	* MongoDB
-	* Redis
 
 * Install CLI Tools
 	* Fish
@@ -27,9 +25,8 @@ This is generally dependent somewhat on what platform we're working on but here'
 	* Ripgrep
 	* Bat
 	* Exa
-	* Unzip (on linux)
 
-* Install som GUI Tools
+* Install some GUI Tools
 	* Visual Studio Code
 	* Firefox (Developer Edition)
 	* Google Chrome

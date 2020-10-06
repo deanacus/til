@@ -15,6 +15,35 @@ Once that's up and running, you'll need to set up a user and password and
 all that goodness. I recommend keeping this the same as your Windows user,
 just for consistency.
 
+## Setup some SSH Keys:
+
+First generate some keys:
+
+```
+ssh-keygen -t rsa -b 4096 -C "dean@harris.tc" -f $HOME/.ssh/id_rsa -P ""
+ssh-keygen -t rsa -b 4096 -C "dean@repeat.gg" -f $HOME/.ssh/work_rsa -P ""
+```
+
+Then use them where I need to. Primarily git providers:
+
+* [Github (Personal)](https://github.com/settings/ssh/new)
+* [Bitbucket (Work)](https://bitbucket.org/account/settings/ssh-keys/)
+
+## Update Apt Repos
+
+To ensure that the full breadth of the packages on Apt are available, and up to date,
+update the Apt repos on your machine:
+
+```
+sudo apt update
+```
+
+You may also want to ensure that there are no upgrades available, by running apt upgrade:
+
+```
+sudo apt upgrade
+```
+
 ## Install required packages
 
 Depending on what flavour of web development you do, you'll likely need some
@@ -22,89 +51,54 @@ slightly different packages than I do, but at the very least some of them
 will be the same. Here is my command:
 
 ```
-sudo apt-get install apache2 php7.4 mongodb mariadb-server yarn fzf ripgrep neovim
+sudo apt-get install apache2 php mongodb mysql-server fzf neovim composer php7.4-curl php7.4-dom php7.4-simplexml php7.4-xml
 ```
 
 ## Configure Apache
 
-Very little to do here. Mostly just needed to add a site to the `sites-available`
-folder, and create a symlink into the `sites-enabled` folder.
-
-## Configure PHP
-
-In order to configure PHP to run as expected locally, you will need to install
-some additional packages and enable them in the php.ini file. 
-
-Install the packages:
+Enable apache to work outside of the predefined directories by creating a `<Directory>`
+definition in `/etc/apache2/apache2.conf`, changing the path to wherever you will
+clone repositories to
 
 ```
-sudo apt-get install php7.4-bcmath php7.4-curl php7.4-mbstring php7.4-mysql php7.4-sqlite3 php7.4-xml php7.4-zip
+<Directory /home/deanacus/dev/>
+  Options Indexes Includes FollowSymLinks MultiViews
+  AllowOverride All
+  Require all granted
+</Directory>
 ```
 
-Enable the extensions you will need. Mine for work look like this:
+## Configure MySQL
+
+You won't be able to connect to mysql as root without `sudo`, thanks to the
+default authentication setting of `auth_socket`. We can fix this, though,
+by connecting via `sudo mysql -u root`, and reconfiguring the root user.
+
+I suggest, firstly, that you create a user with the same username as your current
+user, with no password, and grant that user super user privileges. Just in case
+something goes wrong:
 
 ```
-extension=bz2
-extension=curl
-extension=fileinfo
-extension=gd2
-extension=gettext
-extension=gmp
-extension=intl
-extension=imap
-extension=ldap
-extension=mbstring
-extension=exif
-extension=mysqli
-extension=openssl
-extension=pdo_mysql
-extension=pdo_sqlite
-extension=soap
-extension=sockets
-extension=sqlite3
-extension=xmlrpc
-extension=xsl
+CREATE USER 'deanacus'@'localhost' IDENTIFIED WITH mysql_native_password BY '';
+GRANT ALL PRIVILEGES ON *.* to 'deanacus'@'localhost';
+FLUSH PRIVILEGES;
 ```
 
-## Configure MySQL/MariaDB
-
-Once MySQL is up and running, you will struggle to connect using a password,
-due to the fact that it is configured to require a socket based connection by
-default. You can use `sudo` to connect with a password, but this isn't feasible
-for development tooling, as it won't have sudo access.
-
-If mysql won't start because of a missing `mysql.sock` file, check the server config
-file at `/etc/mysql/mariadb.conf.d/50-server.cnf`, and if necessary, change the
-bind-address setting from `127.0.0.1` to `localhost`. This *should* allow it to run.
-
-Connect to the mysql instance by running `sudo mysql -u root` and entering your
-Linux (not mysql) password. Once connected, verify that the root user exists by
-running
+Then, change the authentication values for `root`:
 
 ```
-SELECT * FROM mysql.user WHERE user='root' \G
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '';
 ```
 
-You should see the details for the root user, including Host as 'localhost', 
-and plugin as 'unix_socket'. To enable password based connections for the root
-user, run
-
-```
-UPDATE mysql.user SET plugin = '', Host = '%' WHERE user = 'root';
-```
+Now, you should be able to run any mysql commands you need as either root or yourself
+without needing a password.
 
 ## Install Node
 
 The version of Node that exists in the Ubuntu repositories is super out of date. So we'll need to add a new repository in order to install an up to date version.
 
 ```
-curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-```
-
-Now we can run
-
-```
-sudo apt-get install -y nodejs
+curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash && sudo apt-get install -y nodejs
 ```
 
 ## Yarn
@@ -113,33 +107,59 @@ If you like to use the Yarn package manager, you'll need to add another repo, as
 Yarn website, but I'll just list them here for ease:
 
 ```
-curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-sudo apt update
-sudo apt install --no-install-recommends yarn
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - && echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list && sudo apt update && sudo apt install --no-install-recommends yarn
 ```
+
+## Set up Symfony Repo:
+
+Clone the repository to wherever you keep your source code (get the repo from bitbucket or confluence)
+
+Navigate to `/etc/apache2/sites-available` and run `sudo cp 000.default.conf 001.devlocal.conf`.
+
+Edit the newly created file and insert the following configuration, replacing the DocumentRoot
+and Directory values to wherever you have the symfony repo:
+
+```
+<VirtualHost *:80>
+  ServerName devlocal.repeat.gg
+  ServerAlias devlocal.repeat.gg
+  ErrorLog /var/log/apache2/error.log
+  CustomLog /var/log/apache2/access.log combined
+  DocumentRoot /home/deanacus/dev/symfony/web
+  <Directory /home/deanacus/dev/symfony/web>
+    Order Deny,Allow
+    Allow from all
+  </Directory>
+</VirtualHost>
+```
+
+Create a symlink for this file in `/etc/apache2/sites-enabled` by running
+
+```
+sudo ln -sf /etc/apache2/sites-available/001.devlocal.conf /etc/apache2/sites-enabled/001.devlocal.conf
+```
+
+Now follow the rest of the steps in Confluence to finish setting up the application.
 
 ## Access the machine
 
-Because WSL2 is just a virtual machine with little to no configuration in terms
-of how it is virtualised, the network is no longer an extension of the host
-network, but a separate network entirely. One that changes every time something
-to do with the VM's network changes. In order to make this more bearable so that
-I don't need to manually update my Windows hosts file every time I restart (which
-happens super duper often thanks to Windows), I whipped up a really quick shell script
-to do it for me:
+WSL2 is purely a Hyper-V virtual machine, without bridged networks. That means
+that every time WSL starts, its IP changes, thus requiring an update to the windows
+hosts file. I have a little shell script setup to manage that:
 
 ```
 #! /bin/bash
-ip=$(ifconfig eth0 | grep -Eo "inet ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})")
+ip=$(ip addr list eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 
+
+# Update the Windows hostfile, because the networks aren't bridged
 echo "127.0.0.1 localhost
-${ip#inet } $1
+${ip} devlocal.repeat.gg
 ::1 localhost" > /mnt/c/Windows/System32/drivers/etc/hosts
 ```
 
-Basically it just replaces the contents of my hosts file with whatever `ip` is set to,
-and with whatever argument I pass to it.
+## Enable GUI apps to run.
 
-In practice, this can probably be hardcoded, or even include reading the files in `sites_enabled` 
-but that's more work than I'm willing to put in.
+In your shell configuration, export a variable called 'DISPLAY' that has the value equvivalent to
+"$(cat /etc/resolv.conf | grep -Po '\d+(\.\d+){3}'):0.0", then install VCXSRV to run an x11 server on
+the windows machine that they linux box can connect to, to launch gui apps
