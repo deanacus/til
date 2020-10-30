@@ -1,8 +1,7 @@
 # Random Notes
 
-* `LIKE` and `IN` are hella bad performance wise
-* JOIN syntax `JOIN table on table.colum = alreadySelectedTable.column`
-
+- `LIKE` and `IN` are hella bad performance wise
+- JOIN syntax `JOIN table on table.colum = alreadySelectedTable.column`
 
 # User Records for Emails
 
@@ -58,4 +57,42 @@ where
   u.handle = ''
   and g.gameKey = 'fortnite'
   AND tes.when_created >= '2020-04-13'
+```
+
+## Top 3 Closed Tournaments in the last 90 days by entries for @gameKey
+
+```
+SELECT
+  g.name as Game,
+  spt.name as Tournament,
+  spt.slots as 'Tournament Slots',
+  spte.tournament_id as 'Tournament ID',
+  count(*) as entries
+FROM
+  single_player_tournament_entry spte
+JOIN
+  single_player_tournament spt
+  ON
+    spt.id = spte.tournament_id
+JOIN
+  game g
+    ON
+      g.id = spt.game_id
+    AND
+      g.gameKey = @gameKey
+    AND
+      spt.start_time
+      BETWEEN
+        date_sub(current_date(), INTERVAL 90 DAY)
+      AND
+        current_date()
+    AND
+      spt.finished = 1
+GROUP BY
+  spte.tournament_id
+ORDER BY
+  count(*)
+DESC
+LIMIT
+  3
 ```
