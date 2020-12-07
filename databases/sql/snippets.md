@@ -29,6 +29,36 @@ limit
   60000;
 ```
 
+# Select Newsletter Details for users with a specific game
+
+```
+SELECT
+  id,
+  username,
+  enabled,
+  banned,
+  accountSuspendedUntil,
+  email,
+  handle,
+  firstname,
+  lastname,
+  state,
+  country,
+  marketing_auth
+FROM
+  user_records ur
+JOIN
+  user_games ug
+ON
+  ug.id = ur.id
+JOIN
+  game g
+ON
+  g.id = ug.game_id
+WHERE
+  g.game_key = 'cod-warzone';
+```
+
 # Get external game id for a specific game for a player
 
 ```
