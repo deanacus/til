@@ -1,6 +1,6 @@
 # Create Context Template
 
-```
+```typescript
 import React, { createContext, useReducer } from 'react';
 
 const StateContext = createContext({});
@@ -49,6 +49,51 @@ const useDispatch = (): React.Dispatch<Action> => {
   const context = React.useContext(DispatchContext);
   if (context === undefined) {
     throw new Error('useDispatch must be used within a DispatchContext Provider');
+  }
+  return context;
+}
+
+export { Provider as default, useState, useDispatch};
+```
+
+```javascript
+import React, { createContext, useReducer } from 'react';
+
+const CustomStateContext = createContext({});
+const CustomDispatchContext = createContext({});
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    default: {
+      throw new Error(`Unhandled action type: ${action.type}`);
+    }
+  }
+}
+
+const CustomProvider = () => {
+  const [state, dispatch] = useReducer(reducer, {});
+
+  return (
+    <CustomStateContext.Provider value={state}>
+      <CustomDispatchContext.Provider value={dispatch}>
+        {children}
+      </CustomDispatchContext.Provider>
+    </CustomStateContext.Provider>
+  );
+}
+
+const useCustomState = () => {
+  const context = React.useContext(CustomStateContext);
+  if (context === undefined) {
+    throw new Error('useCustomState must be used within a CustomProvider');
+  }
+  return context;
+}
+
+const useCustomDispatch = () => {
+  const context = React.useContext(CustomDispatchContext);
+  if (context === undefined) {
+    throw new Error('useCustomDispatch must be used within a CustomProvider');
   }
   return context;
 }
