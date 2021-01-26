@@ -2,38 +2,28 @@
 
 - `LIKE` and `IN` are hella bad performance wise
 - JOIN syntax `JOIN table on table.colum = alreadySelectedTable.column`
+- We use proper SQL DATEs, so we can do date maths, like
 
-# User Records for Emails
+  ```sql
+  SET @table := '';
+  SET @date := '';
 
-To get all users, remove the `where` clause and `limit`
+  @table.when_created >= @date
+  ```
 
-```
-select
-  id,
-  username,
-  enabled,
-  banned,
-  accountSuspendedUntil,
-  email,
-  handle,
-  firstname,
-  lastname,
-  state,
-  country,
-  marketing_auth
-from
-  user_records
-where
-  country = 'US'
-limit
-  60000;
-```
+  or
 
-# Select Newsletter Details for users with a specific game
+  ```sql
+  SET @table := '';
+  SET @intervalDays := '';
 
-```
-SELECT
-  id,
+  @table.start_time BETWEEN date_sub(current_date(), INTERVAL @intervalDays DAY) AND current_date()
+  ```
+
+## User Records for Emails in US
+
+```sql
+SELECT id,
   username,
   enabled,
   banned,
@@ -46,54 +36,137 @@ SELECT
   country,
   marketing_auth
 FROM
-  user_records ur
-JOIN
-  user_games ug
-ON
-  ug.id = ur.id
-JOIN
-  game g
-ON
-  g.id = ug.game_id
+  user_records
 WHERE
-  g.game_key = 'cod-warzone';
+  country = 'US'
 ```
 
-# Get external game id for a specific game for a player
+## Select Newsletter Details for users with a specific game by game_key
 
-```
-SELECT distinct(external_game_identity) FROM user_game_region ugr
-  JOIN user_games ug on ug.id = ugr.user_game_id
-  JOIN game g on g.id = ug.game_id
-  JOIN user_records ur on ur.id = ug.user_id
-  WHERE ur.handle LIKE ''
-  AND g.name = '';
+```sql
+SET @gameKey := 'fortnite'
+
+SELECT id,
+  username,
+  enabled,
+  banned,
+  accountSuspendedUntil,
+  email,
+  handle,
+  firstname,
+  lastname,
+  state,
+  country,
+  marketing_auth
+FROM user_records ur
+  JOIN
+    user_games ug
+  ON
+    ug.id = ur.id
+  JOIN
+    game g
+  ON
+    g.id = ug.game_id
+WHERE
+  g.game_key = @gameKey;
 ```
 
-## Select GR data plus handle for user.handle
+## Select Newsletter Details for users with a specific game by game_id
 
+```sql
+SET @gameID := '1234abcd';
+
+SELECT user_records.id,
+  username,
+  enabled,
+  banned,
+  accountSuspendedUntil,
+  email,
+  handle,
+  firstname,
+  lastname,
+  state,
+  country,
+  marketing_auth
+FROM user_records ur
+  JOIN
+    user_games ug
+  ON
+    ug.user_id = ur.id
+WHERE
+  ug.game_id = @gameID;
 ```
-select
-  gr.*,
+
+## Get external game id for a specific game for a player
+
+```sql
+SET @handle := 'xShootingBlanksx';
+SET @gameName := 'fortnite';
+
+SELECT distinct(external_game_identity)
+FROM user_game_region ugr
+  JOIN
+    user_games ug
+  ON
+    ug.id = ugr.user_game_id
+  JOIN
+    game g
+  ON
+    g.id = ug.game_id
+  JOIN
+    user_records ur
+  ON
+    ur.id = ug.user_id
+WHERE
+  ur.handle LIKE @handle
+AND
+  g.name = @gameName;
+```
+
+## Select game_region data for @gameKey plus user.handle for @userHandle that has entered a tournament after @date
+
+```sql
+SET @handle := 'xShootingBlanksx';
+SET @gameName := 'fortnite';
+SET @entryDate := '2020-11-30';
+
+SELECT gr.*,
   u.handle
-from
-  tournament_entry_score tes
-  join game_result gr on gr.id = tes.game_result_id
-  join single_player_tournament_entry spte on spte.id = tes.entry_id
-  join single_player_tournament spt on spt.id = spte.tournament_id
-  join game g on g.id = spt.game_id
-  join user_records u on u.id = spte.user_id
-where
-  u.handle = ''
-  and g.gameKey = 'fortnite'
-  AND tes.when_created >= '2020-04-13'
+FROM tournament_entry_score tes
+  JOIN
+    game_result gr
+  ON
+    gr.id = tes.game_result_id
+  JOIN
+    single_player_tournament_entry spte
+  ON
+    spte.id = tes.entry_id
+  JOIN
+    single_player_tournament spt
+  ON
+    spt.id = spte.tournament_id
+  JOIN
+    game g
+  ON
+    g.id = spt.game_id
+  JOIN
+    user_records u
+  ON
+    u.id = spte.user_id
+WHERE
+  u.handle = @userHandle
+AND
+  g.gameKey = @gameKey
+AND
+  tes.when_created >= @entryDate
 ```
 
 ## Top 3 Closed Tournaments in the last 90 days by entries for @gameKey
 
-```
-SELECT
-  g.name as Game,
+```sql
+set @gameKey := 'fortnite';
+
+SELECT g.name as Game,
   spt.name as Tournament,
   spt.slots as 'Tournament Slots',
   spte.tournament_id as 'Tournament ID',
@@ -102,22 +175,22 @@ FROM
   single_player_tournament_entry spte
 JOIN
   single_player_tournament spt
-  ON
-    spt.id = spte.tournament_id
+ON
+  spt.id = spte.tournament_id
 JOIN
   game g
-    ON
-      g.id = spt.game_id
-    AND
-      g.gameKey = @gameKey
-    AND
-      spt.start_time
-      BETWEEN
-        date_sub(current_date(), INTERVAL 90 DAY)
-      AND
-        current_date()
-    AND
-      spt.finished = 1
+ON
+  g.id = spt.game_id
+AND
+  g.gameKey = @gameKey
+AND
+  spt.start_time
+  BETWEEN
+    date_sub(current_date(), INTERVAL 90 DAY)
+  AND
+    current_date()
+AND
+  spt.finished = 1
 GROUP BY
   spte.tournament_id
 ORDER BY
@@ -125,4 +198,21 @@ ORDER BY
 DESC
 LIMIT
   3
+```
+
+Get
+```sql
+set @tournamentID := '';
+
+SELECT *
+FROM
+  user_records ur
+JOIN
+  single_player_tournament_entry spte
+ON
+  spte.user_id = ur.id
+JOIN
+  single_player_tournament spt on spt.id = spte.tournament_id
+WHERE
+  spt.id = @tournament;
 ```
