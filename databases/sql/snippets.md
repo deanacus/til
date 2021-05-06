@@ -39,12 +39,14 @@ FROM
   user_records
 WHERE
   country = 'US'
+AND
+  banned = 0;
 ```
 
 ## Select Newsletter Details for users with a specific game by game_key
 
 ```sql
-SET @gameKey := 'fortnite'
+SET @gameKey := 'league_of_legends'
 
 SELECT id,
   username,
@@ -62,13 +64,15 @@ FROM user_records ur
   JOIN
     user_games ug
   ON
-    ug.id = ur.id
+    ug.user_id = ur.id
   JOIN
     game g
   ON
     g.id = ug.game_id
 WHERE
-  g.game_key = @gameKey;
+  g.game_key = @gameKey
+AND
+  banned = 0;
 ```
 
 ## Select Newsletter Details for users with a specific game by game_id
@@ -95,6 +99,8 @@ FROM user_records ur
     ug.user_id = ur.id
 WHERE
   ug.game_id = @gameID;
+AND
+  banned = 0;
 ```
 
 ## Get external game id for a specific game for a player
@@ -215,4 +221,14 @@ JOIN
   single_player_tournament spt on spt.id = spte.tournament_id
 WHERE
   spt.id = @tournament;
+```
+
+Count users who have entered at least one tournament:
+
+```sql
+SELECT count(distinct(spte.user_id)) FROM single_player_tournament_entry spte
+  JOIN
+    user_records ur
+  ON
+    ur.id = spte.user_id
 ```
