@@ -223,7 +223,7 @@ WHERE
   spt.id = @tournament;
 ```
 
-Count users who have entered at least one tournament:
+## Count users who have entered at least one tournament:
 
 ```sql
 SELECT count(distinct(spte.user_id)) FROM single_player_tournament_entry spte
@@ -231,4 +231,66 @@ SELECT count(distinct(spte.user_id)) FROM single_player_tournament_entry spte
     user_records ur
   ON
     ur.id = spte.user_id
+```
+
+## Get number users of each age in tournament:
+
+```SQL
+SET @tournamentID := '';
+SELECT
+  COUNT(spte.user_id),
+  DATE_FORMAT(NOW(), '%Y') - DATE_FORMAT(ur.dob, '%Y') - (DATE_FORMAT(NOW(), '00-%m-%d') < DATE_FORMAT(ur.dob, '00-%m-%d')) as Age
+FROM
+  single_player_tournament_entry spte
+JOIN
+  user_records ur ON ur.id = spte.user_id
+WHERE
+  tournament_id = @tournamentID
+GROUP BY
+  Age
+```
+
+## Select a subset of user data with nice column names and list all the tournaments they've entered in one field:
+
+```SQL
+SELECT DISTINCT
+  ur.id,
+  ur.date_created AS 'Joined',
+  DATE_FORMAT(NOW(), '%Y') - DATE_FORMAT(ur.dob, '%Y') - (DATE_FORMAT(NOW(), '00-%m-%d') < DATE_FORMAT(ur.dob, '00-%m-%d')) AS 'Age',
+  ur.country AS 'Country',
+  ur.state AS 'State',
+  ur.zip_code AS 'Zip',
+  ur.city AS 'City',
+  ur.banned AS 'Is Banned',
+  GROUP_CONCAT(spte.tournament_id) as 'Entered Tournaments'
+FROM
+  single_player_tournament_entry spte
+JOIN
+  user_records ur
+ON
+  ur.id = spte.user_id
+GROUP BY
+  ur.id
+  ```
+
+
+```sql
+SELECT distinct
+  ur.handle as Handle,
+  g.name as 'Game Name',
+  ur.email as 'Email Address',
+  ur.country as Country,
+  ur.state as State,
+  ur.date_created as 'Date Created',
+  ur.registration_tracking_params as 'Registration Tracking Params'
+FROM
+  user_records ur
+JOIN
+  user_games ug ON ug.user_id = ur.id
+JOIN
+  game g ON g.id = ug.game_id
+WHERE
+  ur.date_created BETWEEN '2021-05-20' AND '2021-06-14'
+AND
+  ur.banned is false;
 ```

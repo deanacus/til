@@ -13,23 +13,26 @@
 * Prefer Context over Redux
 * Keep Context as low in the tree as possible
 * Follow the [Kent Dodds Context](https://kentcdodds.com/blog/how-to-use-react-context-effectively/) pattern
-* Prefer `useReducer` over `useState`
+* Prefer `useReducer` over `useState` for anything more than a simple primitive value
+
+## Props
+
+* Avoid prop spreading
+* Prefer children over props
+* Prefer primitive values over Objects or Arrays
+* Avoid passing 
+* Avoid render props
+* Avoid shadowing HTML attributes
+* Prefer optional props
+* Props describe their purpose: `isDisabled`, `onClick`
+* Expose `id`, `className`, `as` and `aria-*` whenever possible
+* Document each components props - propTypes, TypeScript, JSDoc
 
 ## Styling
 
 * Style using Styled Components or Emotion
 * Put styles in a separate, sibling file
 * Use a theme in the spirit of the [System UI Theme Spec](https://system-ui.com/theme/)
-
-## API
-
-* Prefer children over props
-* Avoid render props
-* Avoid shadowing HTML attributes
-* Prefer optional props
-* Props describe their purpose: `isDisabled`, `onClick`
-* Avoid prop spreading
-* Expose `id`, `className`, `as` and `aria-*` whenever possible
 
 ## Logic
 
