@@ -34,3 +34,22 @@ This is generally dependent somewhat on what platform we're working on but here'
 	* MySQLWorkbench
 	* 1Password
 	* Figma
+
+
+---
+
+Install Homebrew
+
+`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+
+Install packages
+
+`brew install bat composer curl exa fd fish fnm fzf git httpd neovim php@7.4 ripgrep tmux wget`
+
+Install apps
+
+`brew install --cask 1password discord docker figma firefox-developer-edition google-chrome hyper mysqlworkbench postman rectangle runjs slack spotify studio-3t visual-studio-code`
+
+Clone Dotfiles
+
+`git clone https://github.com/deanacus/dotfiles ~/dotfiles`

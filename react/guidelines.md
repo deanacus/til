@@ -20,7 +20,7 @@
 * Avoid prop spreading
 * Prefer children over props
 * Prefer primitive values over Objects or Arrays
-* Avoid passing 
+* Avoid passing
 * Avoid render props
 * Avoid shadowing HTML attributes
 * Prefer optional props
@@ -55,4 +55,4 @@
 * Snapshots are pointless
 * Colocate tests with what they're testing
 * Prefer many small, simple tests over fewer, larger, more complex tests
-* Don't be afraid to [wrap an re-export](https://testing-library.com/docs/react-testing-library/setup/#custom-render) the render function for custom wrappers
+* Don't be afraid to [wrap and re-export](https://testing-library.com/docs/react-testing-library/setup/#custom-render) the render function for custom wrappers
