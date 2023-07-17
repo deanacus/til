@@ -1,3 +1,5 @@
+# Footnotes
+
 Use numbers
 
 The indicator should link to the note

@@ -40,6 +40,10 @@ topics:
 
   `docker network rm <network>`
 
+## Start Container
+
+`docker start <container>`
+
 ## Stop Containers
 
 * Gracefully:
@@ -53,6 +57,28 @@ topics:
 * All:
 
   `docker stop|kill $(docker ps -qa)`
+
+## Update and Stop Crash Looping Container
+
+`docker update --restart=no && docker stop`
+
+## Copy files into container
+
+`docker cp <path/on/host> [container]:<path/in/container>`
+
+## Copy files from container
+
+`docker cp [container]:<path/in/container> <path/on/host>`
+
+## Connect to running container
+
+* As current user
+
+  `docker exec -i -t /bin/sh`
+
+* As different user:
+
+  `docker exec -i -t -u root /bin/sh`
 
 ## Cleanup Scripts
 
